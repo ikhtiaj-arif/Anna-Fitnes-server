@@ -58,12 +58,25 @@ async function run(){
         app.get('/reviews/:id', async(req, res)=>{
             const id = req.params.id;
             const filter = {programId:id};
-            const options = {   }
+            const timeSort = { time: -1 }
             
-            const cursor = reviewsCollection.find(filter);
+            const cursor = reviewsCollection.find(filter).sort(timeSort);
             const result = await cursor.toArray();
             res.send(result)
            
+        })
+
+        app.get('/reviews', async(req, res)=> {
+            let query = {};
+            if(req.query.email){
+                query = {
+                    email : req.query.email
+                }
+            }
+            const cursor = reviewsCollection.find(query);
+            const reviews = await cursor.toArray()
+            res.send(reviews);
+
         })
 
 
