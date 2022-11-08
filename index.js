@@ -1,10 +1,13 @@
 const express = require("express");
 const cors = require("cors");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const jwt = require('jsonwebtoken')
 require("dotenv").config();
 
 const app = express();
 const port = process.env.PORT || 5000;
+
+// middle wears
 
 app.use(cors());
 app.use(express.json());
@@ -12,6 +15,14 @@ app.use(express.json());
 app.get("/", (req, res) => {
   res.send("server running");
 });
+
+// jwt middle wear 
+function verifyJWT(req, res, next) {
+
+}
+
+
+
 
 // mongodb
 
@@ -29,6 +40,18 @@ async function run() {
       .db("simonPanda")
       .collection("allPrograms");
     const reviewsCollection = client.db("simonPanda").collection("reviews");
+
+    // verify user using jwt
+    // send token to user
+    app.post('/userJWT', (req, res)=>{
+        const user = req.body;
+        const secret = process.env.ACCESS_TOKEN_SECRET;
+        const token = jwt.sign(user, secret, { expiresIn: '5h'});
+        // must wrap the token inside an object..otherwise browser wont be able to read it
+        res.send({token})
+    })
+
+
 
     // load all programs
     app.get("/allPrograms", async (req, res) => {
