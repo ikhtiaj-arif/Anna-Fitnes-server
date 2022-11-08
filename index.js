@@ -48,16 +48,22 @@ async function run(){
         app.get('/program/:id', async(req, res)=>{
             const id = req.params.id;
             const query = { _id: ObjectId(id)}
+            
             const idProgram = await allProgramsCollection.findOne(query);
+            
             res.send(idProgram)
         })
 
 // get review
-        app.get('/reviews', async(req, res)=>{
-            const query = {};
-            const cursor = reviewsCollection.find(query);
+        app.get('/reviews/:id', async(req, res)=>{
+            const id = req.params.id;
+            const filter = {programId:id};
+            const options = {   }
+            
+            const cursor = reviewsCollection.find(filter);
             const result = await cursor.toArray();
-            res.send(result);
+            res.send(result)
+           
         })
 
 
@@ -65,7 +71,7 @@ async function run(){
 // post review to db
         app.post('/reviews', async(req, res)=> {
             const review = req.body;
-            console.log(review);
+            // console.log(review);
             const result = await reviewsCollection.insertOne(review);
             res.send(result);
         });
