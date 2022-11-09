@@ -18,7 +18,24 @@ app.get("/", (req, res) => {
 
 // jwt middle wear 
 function verifyJWT(req, res, next) {
+    const authHeader = req.headers.authorization;
+    // console.log(authHeader);
+    if(!authHeader){
+        res.status(401).send({message: 'Unauthorized Access!'})
+        console.log('x');
+    }
+    const token = authHeader.split(' ')[1];
+    // console.log(token);
+    try{
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        console.log('success middlewear');
+        req.decoded = decoded;
 
+        next();
+    }
+    catch(err) {
+        res.status(401).send({message: 'Unauthorized Access!'})
+    }
 }
 
 
@@ -71,7 +88,8 @@ async function run() {
       const filterPrograms = await cursor.skip(toSkip).limit(size).toArray();
       res.send(filterPrograms);
     });
-    // load single program using dynamic id
+
+// load single program using dynamic id
     app.get("/program/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
@@ -93,7 +111,12 @@ async function run() {
     });
 
     // get all reviews according to user
-    app.get("/reviews", async (req, res) => {
+    app.get("/reviews", verifyJWT, async (req, res) => {
+        const decoded = req.decoded;
+        if(decoded.email !== req.query.email){
+           return res.status(403).send({message: "Unauthorized Access!"})
+        }
+
       let query = {};
       if (req.query.email) {
         query = {
@@ -106,7 +129,11 @@ async function run() {
     });
 
     // get one review
-    app.get("/review/:id", async (req, res) => {
+    app.get("/review/:id", verifyJWT, async (req, res) => {
+        if(!req.decoded.email){
+            return res.status(403).send({message: "Unauthorized Access!"})
+        }
+
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
 
@@ -115,16 +142,22 @@ async function run() {
     });
 
     // post review to db
-    app.post("/reviews", async (req, res) => {
+    app.post("/reviews", verifyJWT, async (req, res) => {
       const review = req.body;
-      // console.log(review);
+      if(review.email !== req.decoded.email){
+        return res.status(403).send({message: "Unauthorized Access!"})
+      }
+
       const result = await reviewsCollection.insertOne(review);
       res.send(result);
     });
     // update a review
-    app.put("/reviews/:id", async (req, res) => {
+    app.put("/reviews/:id", verifyJWT, async (req, res) => {
       const id = req.params.id;
       const update = req.body;
+      if(update.email !== req.decoded.email){
+        return res.status(403).send({message: "Unauthorized Access!"})
+      }
 
       const filter = { _id: ObjectId(id) };
       const option = { upsert: true };
@@ -144,12 +177,20 @@ async function run() {
       res.send(result);
     });
     // delete review
-    app.delete("/review/:id", async (req, res) => {
+    app.delete("/review/:id", verifyJWT, async (req, res) => {
       const id = req.params.id;
+      if(!req.decoded.email){
+        return res.status(403).send({message: "Unauthorized Access!"})
+      }
+     
       const query = { _id: ObjectId(id) };
       const result = await reviewsCollection.deleteOne(query);
       res.send(result);
     });
+
+
+
+
   } finally {
   }
 }
