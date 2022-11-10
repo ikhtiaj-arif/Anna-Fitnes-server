@@ -53,6 +53,7 @@ async function run() {
       .db("simonPanda")
       .collection("allPrograms");
     const reviewsCollection = client.db("simonPanda").collection("reviews");
+    const blogsCollection = client.db("simonPanda").collection("blogs");
 
     // verify user using jwt
     // send token to user
@@ -71,6 +72,14 @@ async function run() {
       const allPrograms = await cursor.toArray();
       res.send(allPrograms);
     });
+
+    // get blogs
+    app.get('/blogs', async(req, res)=> {
+      const query = {};
+      const cursor = blogsCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result)
+    })
 
     // post to db with private route jwt authorization
     app.post("/allPrograms", verifyJWT, async (req, res) => {
